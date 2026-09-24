@@ -2,13 +2,10 @@ const Product = require("../models/Product");
 
 const createProduct = async (req, res) => {
     try {
-        const { name, price } = req.body || {};
-
-
+        const { name, price ,brand,category,stock} = req.body || {};
  const existingProduct = await Product.findOne({
             name: name.trim()
         });
-
         if (existingProduct) {
             return res.status(409).json({
                 success: false,
@@ -16,10 +13,12 @@ const createProduct = async (req, res) => {
             });
         }
 
-
         const product = await Product.create({
             name,
-            price
+            price,
+            brand,
+            category,
+            stock
         });
 
         return res.status(201).json({
@@ -29,13 +28,17 @@ const createProduct = async (req, res) => {
         });
 
     } catch (error) {
-        console.error(error);
+       
+
 
         // Mongoose validation error
         if (error.name === "ValidationError") {
+         
+        const firstError = Object.values(error.errors)[0];
+        
             return res.status(400).json({
                 success: false,
-                message: error.message
+                message: firstError.message
             });
         }
 
@@ -183,8 +186,8 @@ const updateProduct = async (req, res) => {
         });
 
     } catch (error) {
-        console.error(error);
-
+        console.log(error);
+   
         // Invalid MongoDB ObjectId
         if (error.name === "CastError") {
             return res.status(400).json({
@@ -194,9 +197,11 @@ const updateProduct = async (req, res) => {
         }
 
         // Mongoose validation error
+
         if (error.name === "ValidationError") {
+           
             return res.status(400).json({
-                success: false,
+                success: false,   
                 message: error.message
             });
         }
