@@ -1,13 +1,14 @@
 const User = require("../models/User");
-
-
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 // ==========================
 // CREATE USER
 // ==========================
+
 const createUser = async (req, res) => {
     try {
-        
-  const { name, email } = req.body || {};
+
+        const { name, email,password } = req.body || {};
 
         if (!name || !email) {
             return res.status(400).json({
@@ -15,18 +16,29 @@ const createUser = async (req, res) => {
                 message: "Name and email are required"
             });
         }
-         const existingUser = await User.getByEmail(email);
-          if (existingUser) {
+        if(!password){
+              return res.status(400).json({
+                success: false,
+                message: "Password is required"
+            });
+        }
+        const hashedPassword = await bcrypt.hash(
+    password,
+    12
+);
+    
+        const existingUser = await User.getByEmail(email);
+        if (existingUser) {
             return res.status(409).json({
                 success: false,
                 message: "User already registered"
             });
         }
 
-        const userId = await User.create(name, email);
-       
-        const user = await User.getById(userId);
+        const userId = await User.create(name, email,hashedPassword);
 
+        const user = await User.getById(userId);
+delete user.password;
         return res.status(201).json({
             success: true,
             message: "User created successfully",
@@ -54,10 +66,50 @@ const createUser = async (req, res) => {
 // ==========================
 // GET ALL USERS
 // ==========================
+const loginUser = async (req, res) => {
+    const { email ,password} = req.body || {};
+    console.log(email);
+    const existingUser = await User.getByEmail(email);
+    const userpassword= existingUser.password;
+const enteredPassword = "mypassword123";
+
+const isMatch = await bcrypt.compare(
+    password,
+    userpassword
+);
+if(!isMatch){
+      res.status(404).json({
+            status: false,
+            message: "Wrong Password ",
+
+        });
+}
+
+
+
+    if (!existingUser) {
+        res.status(404).json({
+            status: false,
+            message: "User Not Registered ",
+
+        });
+
+    }
+   const secretKey=process.env.JWT_SECRET;
+   
+    //sk-LZVoLhH1Vvo3n4U2EP1dx2S4ozG3iWSb7A8oPKCJCFmoKHbQ\
+        delete existingUser.password;
+    const token = jwt.sign(existingUser, secretKey, { expiresIn: '241h' });
+    res.status(200).json({
+        status: true,
+        message: "Api Working",
+        user: existingUser,
+        token:token
+    });
+}
 const getUsers = async (req, res) => {
     try {
         const users = await User.getAll();
-
         return res.status(200).json({
             success: true,
             data: users
@@ -87,7 +139,7 @@ const getUser = async (req, res) => {
                 message: "User not found"
             });
         }
-
+        delete user.password;
         return res.status(200).json({
             success: true,
             data: user
@@ -163,7 +215,7 @@ const updateUser = async (req, res) => {
 const deleteUser = async (req, res) => {
     try {
         const affectedRows = await User.delete(req.params.id);
-         
+
         if (affectedRows === 0) {
             return res.status(404).json({
                 success: false,
@@ -186,11 +238,17 @@ const deleteUser = async (req, res) => {
     }
 };
 
-
+const profileUser=async(req,res)=>{
+    console.log("User Profile Controller");
+    console.log(req.user.id);
+    return res.status(200).json(req.user);
+};
 module.exports = {
     createUser,
     getUsers,
     getUser,
     updateUser,
-    deleteUser
+    deleteUser,
+    loginUser,
+    profileUser
 };

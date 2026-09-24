@@ -11,7 +11,7 @@ class User {
 
         // Check user by email
    static  async  getByEmail (email)  {
-    console.log("user email");
+ 
         const [rows] = await db.execute(
             "SELECT * FROM users WHERE email = ?",
             [email]
@@ -21,11 +21,11 @@ class User {
     }
 
 
-     static async create(name, email) {
-        console.log("user register");
+     static async create(name, email,password) {
+        
         const [result] = await db.execute(
-            "INSERT INTO users (name, email) VALUES (?, ?)",
-            [name, email]
+            "INSERT INTO users (name, email,password) VALUES (?, ?,?)",
+            [name, email,password]
         );
 
         return result.insertId;
