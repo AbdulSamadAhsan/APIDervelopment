@@ -9,10 +9,13 @@ const db = mysql.createPool({
     connectionLimit: 10,
     queueLimit: 0
 });
+
+
+
 async function testConnection() {
     try {
         const connection = await db.getConnection();
-
+                console.log(connection);
         console.log("MySQL connected successfully");
 
         connection.release();
