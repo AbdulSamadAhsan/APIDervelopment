@@ -67,62 +67,40 @@ delete user.password;
 // GET ALL USERS
 // ==========================
 const loginUser = async (req, res) => {
-    const { email ,password} = req.body || {};
-
-     if (!email) {
-            return res.status(400).json({
-                success: false,
-                message: " Email is required"
-            });
+    try {
+        const { email, password } = req.body || {};
+        if (!email) {
+            return res.status(400).json({ success: false, message: "Email is required" });
         }
-        if(!password){
-              return res.status(400).json({
-                success: false,
-                message: "Password is required"
-            });
+        if (!password) {
+            return res.status(400).json({ success: false, message: "Password is required" });
         }
-    const existingUser = await User.getByEmail(email);
-    const userpassword= existingUser.password;
-
-
-
-
-    if (!existingUser) {
-        res.status(404).json({
-            status: false,
-            message: "User Not Registered ",
-
+        const existingUser = await User.getByEmail(email);
+        if (!existingUser) {
+            return res.status(404).json({ status: false, message: "User Not Registered" });
+        }
+        const isMatch = await bcrypt.compare(password, existingUser.password);
+        if (!isMatch) {
+            return res.status(404).json({ status: false, message: "Wrong Password" });
+        }
+        const { password: passwordHash, ...publicUser } = existingUser;
+        const api_key = process.env.API_KEY;
+        const token = jwt.sign(
+            { ...publicUser, api_key },
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRES_IN }
+        );
+        return res.status(200).json({
+            status: true,
+            message: "User Login Successfully",
+            apikey: api_key,
+            token
         });
-
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ success: false, message: "Server error" });
     }
-    const isMatch = await bcrypt.compare(
-    password,
-    userpassword
-);
-if(!isMatch){
-      res.status(404).json({
-            status: false,
-            message: "Wrong Password ",
-
-        });
-}
-   const secretKey=process.env.JWT_SECRET;
-   const expiry=process.env.JWT_EXPIRES_IN;
-    const api_key=process.env.API_KEY;
-    console.log(api_key);
-    //sk-LZVoLhH1Vvo3n4U2EP1dx2S4ozG3iWSb7A8oPKCJCFmoKHbQ\
-    delete existingUser.password;
-         existingUser.api_key=api_key;
-   
-    const token = jwt.sign(existingUser, secretKey, { expiresIn: expiry });
-    res.status(200).json({
-        status: true,
-        message: "User Login Successfully",
-apikey:api_key,    
-        token:token,
-   
-    });
-}
+};
 const getUsers = async (req, res) => {
     try {
         const users = await User.getAll();
