@@ -3,7 +3,7 @@ const db = require("../config/database");
 class User {
     static async getAll() {
         const [rows] = await db.execute(
-            "SELECT * FROM users"
+            "SELECT id,email,name,created_at FROM users"
         );
 
         return rows;
@@ -38,14 +38,31 @@ class User {
 
         return rows[0];
     }
-      static async update(id, name, email) {
-        const [result] = await db.execute(
-            "UPDATE users SET name = ?, email = ? WHERE id = ?",
+     static async update(id, name, email, password) {
+
+    let result;
+
+    if (password && password.trim() !== "") {
+
+        result = await db.execute(
+            `UPDATE users
+             SET name = ?, email = ?, password = ?
+             WHERE id = ?`,
+            [name, email, password, id]
+        );
+
+    } else {
+
+        result = await db.execute(
+            `UPDATE users
+             SET name = ?, email = ?
+             WHERE id = ?`,
             [name, email, id]
         );
-       
-        return result.affectedRows;
     }
+
+    return result[0].affectedRows;
+}
      static async delete(id) {
         const [result] = await db.execute(
             "DELETE FROM users WHERE id = ?",

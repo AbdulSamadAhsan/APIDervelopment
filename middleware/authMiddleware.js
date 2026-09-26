@@ -27,7 +27,7 @@ const authenticate = (req, res, next) => {
         });
     }
 };
-
+console.log("Middeware");
 module.exports = {
     authenticate
 };

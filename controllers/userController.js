@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 // ==========================
 // CREATE USER
 // ==========================
-
+console.log("Controllers");
 const createUser = async (req, res) => {
     try {
 
@@ -68,22 +68,22 @@ delete user.password;
 // ==========================
 const loginUser = async (req, res) => {
     const { email ,password} = req.body || {};
-    console.log(email);
+
+     if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: " Email is required"
+            });
+        }
+        if(!password){
+              return res.status(400).json({
+                success: false,
+                message: "Password is required"
+            });
+        }
     const existingUser = await User.getByEmail(email);
     const userpassword= existingUser.password;
-const enteredPassword = "mypassword123";
 
-const isMatch = await bcrypt.compare(
-    password,
-    userpassword
-);
-if(!isMatch){
-      res.status(404).json({
-            status: false,
-            message: "Wrong Password ",
-
-        });
-}
 
 
 
@@ -95,21 +95,38 @@ if(!isMatch){
         });
 
     }
+    const isMatch = await bcrypt.compare(
+    password,
+    userpassword
+);
+if(!isMatch){
+      res.status(404).json({
+            status: false,
+            message: "Wrong Password ",
+
+        });
+}
    const secretKey=process.env.JWT_SECRET;
-   
+   const expiry=process.env.JWT_EXPIRES_IN;
+    const api_key=process.env.API_KEY;
+    console.log(api_key);
     //sk-LZVoLhH1Vvo3n4U2EP1dx2S4ozG3iWSb7A8oPKCJCFmoKHbQ\
-        delete existingUser.password;
-    const token = jwt.sign(existingUser, secretKey, { expiresIn: '241h' });
+    delete existingUser.password;
+         existingUser.api_key=api_key;
+   
+    const token = jwt.sign(existingUser, secretKey, { expiresIn: expiry });
     res.status(200).json({
         status: true,
-        message: "Api Working",
-        user: existingUser,
-        token:token
+        message: "User Login Successfully",
+apikey:api_key,    
+        token:token,
+   
     });
 }
 const getUsers = async (req, res) => {
     try {
         const users = await User.getAll();
+        
         return res.status(200).json({
             success: true,
             data: users
@@ -161,7 +178,7 @@ const getUser = async (req, res) => {
 // ==========================
 const updateUser = async (req, res) => {
     try {
-        const { name, email } = req.body;
+        const { name, email ,password} = req.body;
 
         if (!name || !email) {
             return res.status(400).json({
@@ -169,11 +186,20 @@ const updateUser = async (req, res) => {
                 message: "Name and email are required"
             });
         }
+         let hashedPassword = null;
+
+        // Hash password only if provided
+        if (password && password.trim() !== "") {
+            hashedPassword = await bcrypt.hash(password, 10);
+        }    
+
 
         const affectedRows = await User.update(
             req.params.id,
             name,
-            email
+            email,
+            hashedPassword
+
         );
 
         if (affectedRows === 0) {
@@ -184,7 +210,7 @@ const updateUser = async (req, res) => {
         }
 
         const user = await User.getById(req.params.id);
-
+        delete user.password;
         return res.status(200).json({
             success: true,
             message: "User updated successfully",
@@ -240,7 +266,8 @@ const deleteUser = async (req, res) => {
 
 const profileUser=async(req,res)=>{
     console.log("User Profile Controller");
-    console.log(req.user.id);
+    
+      
     return res.status(200).json(req.user);
 };
 module.exports = {

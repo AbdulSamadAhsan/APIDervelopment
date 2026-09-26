@@ -4,6 +4,8 @@ const app = express();
 // Middleware
 const userRoutes = require("./routes/userRoutes");
 const productRoutes = require("./routes/productRoutes");
+const helmet = require("helmet");
+
 app.use(express.json());
 // Test route
 const PORT = process.env.PORT || 5000;
