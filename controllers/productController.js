@@ -146,7 +146,7 @@ const updateProduct = async (req, res) => {
          
         }
 
-        return res.status(error.statusCode).json({
+        return res.status(500).json({
             success: false,
             message: error.message
         });
