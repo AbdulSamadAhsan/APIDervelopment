@@ -1,7 +1,7 @@
 const Product = require("../models/Product");
 
 const createProduct = async (data) => {
-      /*
+      
     const existingProduct = await Product.findOne({
         name: data.name.trim()
     });
@@ -10,7 +10,7 @@ const createProduct = async (data) => {
         const error = new Error("Product already exists");
         error.statusCode = 409;
         throw error;
-    }*/
+    }
 
     const product = await Product.create({
         name: data.name,
