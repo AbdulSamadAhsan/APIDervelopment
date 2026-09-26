@@ -1,7 +1,22 @@
 const Product = require("../models/Product");
 
-const createProduct = async (data) => {
-      
+const createProduct = async (data = {}) => {
+    if (typeof data?.name !== "string" || !data.name.trim()) {
+        const error = new Error("Product name is required");
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const product = new Product({
+        name: data.name.trim(),
+        price: data.price,
+        category: data.category,
+        brand: data.brand,
+        stock: data.stock
+    });
+    // Reject invalid input before querying the database.
+    await product.validate();
+
     const existingProduct = await Product.findOne({
         name: data.name.trim()
     });
@@ -12,16 +27,7 @@ const createProduct = async (data) => {
         throw error;
     }
 
-    const product = await Product.create({
-        name: data.name,
-        price: data.price,
-        category:data.category,
-        brand:data.brand,
-        stock:data.stock
-
-    });
-
-    return product;
+    return product.save();
 };
 const updateProduct = async (id, data) => {
 

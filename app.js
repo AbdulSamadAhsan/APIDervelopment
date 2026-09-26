@@ -1,14 +1,12 @@
+require("dotenv").config({ quiet: true });
 const express = require("express");
 const cors = require("cors");
 const app = express();
 // Middleware
 const userRoutes = require("./routes/userRoutes");
 const productRoutes = require("./routes/productRoutes");
-const helmet = require("helmet");
 const connectDB = require("./config/mongodb");
 app.use(express.json());
-// Test route
-const PORT = process.env.PORT || 5000;
 
 app.use(cors({
     origin: "*",
@@ -23,7 +21,6 @@ app.use("/api/users", userRoutes);
 
 app.use("/api/products", async (req, res, next) => {
     try {
-        console.log("Products Api Middleware");
         await connectDB();
         next();
     } catch (error) {

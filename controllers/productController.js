@@ -2,8 +2,6 @@ const Product = require("../models/Product");
 const productService = require("../services/productService");
 const createProduct = async (req, res) => {
     try {
-        const { name, price ,brand,category,stock} = req.body || {};
-
         const product = await productService.createProduct(req.body);
          return res.status(201).json({
             success: true,
@@ -26,7 +24,7 @@ const createProduct = async (req, res) => {
             });
         }
 
-        return res.status(500).json({
+        return res.status(error.statusCode || 500).json({
             success: false,
             message: error.message
         });
